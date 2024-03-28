@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--  
+<[CDATA[
+ project : 신세계백화점차세대프로젝트
+ packageName : 
+ fileName : 
+ author : q93m9k
+ date : 2024.01.11
+ description : 
+  
+ COPYRIGHT ©2024 SHINSEGAE. ALL RIGHTS RESERVED.
+  
+ ===========================================================
+ DATE              AUTHOR             NOTE
+ ===========================================================
+ 2024.01.11       q93m9k              최초 생성
+]]> 
+-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="ldi.Ldi0001">
+    <select id="selectMdCd" resultType="String">
+        /* q93m9k: 2023-08-21 ldi.Ldi0001.selectMdCd - MD코드 */
+        SELECT MD_CD -- MD코드
+          FROM MT_SHOP_MD_M -- MT_매장MD_마스터
+         WHERE 1=1
+           AND STR_CD  = TRIM(#{strCd}) -- 점포코드
+           AND SHOP_CD = TRIM(#{shopCd}) -- 매장코드
+        LIMIT 1
+    </select>
+    
+    <select id="selectDpstrEvnCpnNo" resultType="String">
+        /* q93m9k: 2023-08-21 ldi.Ldi0001.selectDpstrEvnCpnNo - 백화점행사쿠폰번호 */
+        SELECT DPSTR_EVN_CPN_NO -- 백화점행사쿠폰번호(20)
+          FROM MK_CPN_ISSU_P -- MK_쿠폰발급_내역
+         WHERE 1=1
+           AND CST_ID       = TRIM(#{custId}) -- 고객ID
+           AND CPN_ISSU_SNO = #{cpIssNo} -- 쿠폰발급일련번호
+        LIMIT 1
+    </select>
+    
+    <select id="selectCpnIssuSno" resultType="String">
+        /* q93m9k: 2023-08-21 ldi.Ldi0001.selectCpnIssuSno - 쿠폰발급일련번호 */
+        SELECT CPN_ISSU_SNO -- 쿠폰발급일련번호(6)
+          FROM MK_CPN_ISSU_P -- MK_쿠폰발급_내역
+         WHERE 1=1
+           AND CST_ID           = TRIM(#{custId}) -- 고객ID
+           AND DPSTR_EVN_CPN_NO = TRIM(#{cpIssNo}) -- 백화점행사쿠폰번호
+        LIMIT 1
+    </select>
+    
+    <select id="selectDmsItemCpCd" resultType="String">
+        /* q93m9k: 2023-08-21 ldi.Ldi0001.selectDmsItemCpCd NEW DMS ITEM - 쿠폰코드 조회 */
+        SELECT CPD.CPN_CD AS cpCd -- 쿠폰코드
+          FROM MK_DCNT_EVN_CPN_D CPD -- MK_할인행사쿠폰_상세
+         WHERE CPD.EVN_MNG_YM  = #{cpYm}
+           AND CPD.EVN_MNG_NO  = TRIM(#{cpEvtNo})
+        LIMIT 1
+    </select>
+    
+    <insert id="insertTTRLOG_N">
+        /* q93m9k: 2023-08-21 ldi.Ldi0001.insertTTRLOG_N 테스트 로그 등록을 위해 임시로 사용 */
+        INSERT INTO TTRLOG_N
+        (  SALE_DATE    
+         , STORE_CODE   
+         , POS_NO       
+         , TRAN_NO       
+         , ENT_DATE     
+         , ENT_TIME  
+         , TRAN_DATA
+        )
+        VALUES
+        (  #{saleDate}
+         , TRIM(#{storeNo})
+         , TRIM(#{posNo})
+         , #{tranNo}
+         , DATE_FORMAT(CURDATE(), '%Y%m%d')
+         , DATE_FORMAT(CURTIME(), '%H%i%s')
+         , #{logMsg}
+        )
+    </insert>
+</mapper>

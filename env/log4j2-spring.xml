@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration monitorInterval="5" packages="devonframe.log.log4j,com.shinsegae.ssgdx.core.log4j.layout">
+    <Properties>
+        <Property name="LOG_EXCEPTION_CONVERSION_WORD">%xwEx</Property>
+        <Property name="LOG_LEVEL">%5.5p</Property>
+        <Property name="SERVICE_LOG_FILE_NAME">${sys:systemName:-opmds}_${sys:subSystemName:-foundation}_service_trace</Property>
+        <Property name="GUID_PATTERN">%-32equals{%X{guid}}{}{beyond_trace_context_on_startup}</Property>
+        <Property name="LOG_DATEFORMAT_PATTERN">HH:mm:ss[SSS]</Property>
+        <Property name="CONSOLE_LOG_PATTERN">%clr{${sys:LOG_LEVEL}} %clr{%d{${sys:LOG_DATEFORMAT_PATTERN}}}{faint} ${GUID_PATTERN} %clr{---}{faint} %clr{[%15.15t]}{faint} %clr{%-40.40c{1.}}{cyan} %clr{:}{faint} %fm%n${sys:LOG_EXCEPTION_CONVERSION_WORD}</Property>
+        <Property name="FILE_LOG_PATTERN">${LOG_LEVEL} %d{${LOG_DATEFORMAT_PATTERN}} ${GUID_PATTERN} --- [%t] %-40.40c{1.} : %fm%n${sys:LOG_EXCEPTION_CONVERSION_WORD}</Property>
+    </Properties>
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${sys:CONSOLE_LOG_PATTERN}" charset="${sys:CONSOLE_LOG_CHARSET}"/>
+        </Console>
+        <RollingFile  name="File" fileName="/logs001/application_ldi.log" filePattern="/logs001/application_ldi.log.%d{yyyy-MM-dd}" append="false">
+            <JsonLayout compact="true" properties="true" eventEol="true" stacktraceAsString="true" />
+            <PatternLayout pattern="${sys:FILE_LOG_PATTERN}" />
+            <Policies>
+                <SizeBasedTriggeringPolicy size="10 MB" />
+            </Policies>
+            <DefaultRolloverStrategy max="5" />
+        </RollingFile >     
+    </Appenders>
+    
+    <Loggers>
+
+        <!-- TraceLog -->
+        <Logger name="com.shinsegae.ssgdx.core.trace.SsgdxCtlTraceLogAspect" level="trace" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
+        </Logger>
+
+        <Logger name="com.shinsegae.ssgdx.core.trace.SsgdxRestCtlTraceLogAspect" level="trace" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
+        </Logger>
+
+        <Logger name="com.shinsegae.ssgdx.core.trace.SsgdxRepoTraceLogAspect" level="trace" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
+        </Logger>
+
+        <Logger name="devonframe.log.trace.aspect.PerTraceLogAspect" level="trace" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
+        </Logger>
+
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
+        </Root>
+
+    </Loggers>
+</Configuration>

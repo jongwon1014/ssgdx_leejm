@@ -1,0 +1,71 @@
+# 환경별로 다르게 구성되는 접속정보 등을 관리한다.
+spring:
+  datasource:
+    global: &global_datasource
+      url: jdbc-secretsmanager:log4jdbc:mysql:aws://dept-rds-an2-op-dev-opmdsdbd.cluster-c92dc3uwdt0o.ap-northeast-2.rds.amazonaws.com:3306/MDSDEV?rewriteBatchedStatements=true&autoReconnect=true&noAccessToProcedureBodies=true
+      username: dept-sm-an2-op-dev-opbat
+      driver-class-name: com.amazonaws.secretsmanager.sql.AWSSecretsManagerMySQLDriver
+      hikari:
+        register-mbeans: false
+        minimum-idle: 5
+        maximum-pool-size: 20
+    default:
+      master:
+        <<: *global_datasource
+        enabled: true
+      read-only:
+        <<: *global_datasource
+        enabled: true
+        url: jdbc-secretsmanager:log4jdbc:mysql:aws://dept-rds-an2-op-dev-opmdsdbd.cluster-c92dc3uwdt0o.ap-northeast-2.rds.amazonaws.com:3306/MDSDEV?rewriteBatchedStatements=true&autoReconnect=true&noAccessToProcedureBodies=true
+    opmds:
+      master:
+        <<: *global_datasource
+        enabled: true
+      read-only:
+        <<: *global_datasource
+        enabled: true
+        url: jdbc-secretsmanager:log4jdbc:mysql:aws://dept-rds-an2-op-dev-opmdsdbd.cluster-c92dc3uwdt0o.ap-northeast-2.rds.amazonaws.com:3306/MDSDEV?rewriteBatchedStatements=true&autoReconnect=true&noAccessToProcedureBodies=true
+    opdms:
+      master:
+        <<: *global_datasource
+        url: jdbc-secretsmanager:log4jdbc:mysql:aws://dept-rds-an2-op-dev-opdmsdbd.cluster-c92dc3uwdt0o.ap-northeast-2.rds.amazonaws.com:3306/DMSDEV?rewriteBatchedStatements=true&autoReconnect=true&noAccessToProcedureBodies=true
+        username: dept-sm-an2-op-dev-opdmsbat
+      read-only:
+        <<: *global_datasource
+        enabled: true
+        url: jdbc-secretsmanager:log4jdbc:mysql:aws://dept-rds-an2-op-dev-opdmsdbd.cluster-c92dc3uwdt0o.ap-northeast-2.rds.amazonaws.com:3306/DMSDEV?rewriteBatchedStatements=true&autoReconnect=true&noAccessToProcedureBodies=true
+        username: dept-sm-an2-op-dev-opdmsbat
+
+ssgdx:
+  eai:
+    config-path: classpath:/eCrossStubConfig.xml
+  crypto-factory:
+    cubeone:
+      local-support:   
+        type: http
+  jjobs:
+    url: http://100.67.13.60:8080/jjob-manager
+    private-token: ENC(S+AZVnhcpziDzrcbuWmxA9nl19A6gL7d7Yb4dF40IN/1lr25toS4zPsJ7v/p+soq)
+  secretsmanager:
+    name: dept-sm-an2-op-dev-other
+    jasypt-key: JASYPT_KEY
+logging:
+  level:
+    # log4jdbc  
+    jdbc: off
+    jdbc.sqlonly: info
+    jdbc.sqltiming: off
+    jdbc.audit: off
+    jdbc.resultset: off
+    jdbc.resultsettable: off
+    jdbc.connection: off
+    # log4jdbc  
+#    org.springframework.transaction: debug
+#    org.springframework.security: info
+#    com.zaxxer.hikari.HikariConfig: debug
+#    org.springframework.batch: debug
+#    org.springframework.jdbc.datasource.DataSourceTransactionManager: debug
+#    com.zaxxer.hikari: TRACE
+    feign: debug
+    org.springframework.cloud.openfeign: debug
+    com.shinsegae.ssgdx: debug

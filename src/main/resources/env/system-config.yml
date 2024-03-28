@@ -1,0 +1,11 @@
+#application별로 다른 설정에 대해서 작성한다.
+spring:
+  application:
+    name: SsgdxOpdmsLdi
+ssgdx:
+  system-info:
+    system-name: opdms
+    sub-system-name: none
+    system-type: any
+  idgenerator-factory:
+    data-source: dataSource

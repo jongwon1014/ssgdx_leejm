@@ -1,0 +1,17 @@
+<eCrossStubConfig>
+	<eCrossClientConfig log4j="false" systemLogLevel="" connectionTimeout="1000" readTimeout="1800000">
+		<SystemId>MDS BAT</SystemId>				<!-- 업무 시스템코드 -->
+		<Hub isUsed="false">
+			<ServerList />
+		</Hub>
+		<Agent id="OPMDS">						<!-- EAI AGENT 그룹코드 -->
+			<ServerList>
+				<Server>
+					<Channel>OPMDS#1</Channel>	<!-- EAI AGENT 단위코드 -->
+					<Ip>100.67.13.55</Ip>		<!-- EAI AGENT IP -->
+					<Port>7771</Port>			<!-- EAI AGENT PORT -->
+				</Server>
+			</ServerList>
+		</Agent>
+	</eCrossClientConfig>
+</eCrossStubConfig>

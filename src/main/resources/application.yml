@@ -1,0 +1,422 @@
+ssgdx-opdms:
+  server:
+    port: 9100
+    maxThreadCount: &MAX_THREAD_COUNT 200
+    awaitTerminationSeconds: 10
+  client:
+    socketRecvCharset: EUC-KR
+    socketSendCharset: EUC-KR
+    httpRecvCharset: UTF-8
+    httpSendCharset: UTF-8
+    connectTimeout: 3000
+    serviceTimeout: 5000
+spring:
+  quartz:
+    auto-startup: false
+  config.import:
+    - classpath:/env/system-config.yml
+    - classpath:/env/ssgdx-opdms-ldi-properties.yml
+    # 통합운영정보 주제영역별 property 관리
+    - optional:classpath:/config/ssgdx-mds-cm-properties.yml
+  autoconfigure:
+    exclude: devonboot.autoconfigure.core.message.DevOnMessageSourceAutoConfiguration
+  output:
+    ansi:
+      enabled: ALWAYS
+  datasource:
+    global: &global_datasource
+      url: ${MDS_MASTER_URL}
+      username: ${MDS_USER}
+      driver-class-name: ${SECRETS_DRIVER_CLASS}
+      hikari:
+        register-mbeans: false
+        minimum-idle: 10
+        maximum-pool-size: *MAX_THREAD_COUNT
+    default:
+      master:
+        <<: *global_datasource
+        enabled: true
+#        url: ${DMS_MASTER_URL}
+#        username: ${DMS_USER}
+      read-only:
+        <<: *global_datasource
+        enabled: true
+        url: ${MDS_READER_URL}
+#        url: ${DMS_READER_URL}
+#        username: ${DMS_USER}
+    opmds:
+      master:
+        <<: *global_datasource
+        enabled: true
+      read-only:
+        <<: *global_datasource
+        enabled: true
+        url: ${MDS_READER_URL}
+    opdms:
+      master:
+        <<: *global_datasource
+        url: ${DMS_MASTER_URL}
+        username: ${DMS_USER}
+      read-only:
+        <<: *global_datasource
+        enabled: true
+        url: ${DMS_READER_URL}
+        username: ${DMS_USER}   
+ 
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: NON_NULL
+  sleuth:
+    sampler:
+      probability: 1.0
+  devtools:
+    livereload:
+      enabled: true
+    restart:
+      enabled: true
+    add-properties: false
+  main:
+    web-application-type: none
+    allow-bean-definition-overriding: true
+  cloud:
+    config: 
+      enabled: false 
+      import-check:
+        enabled: false      
+cloud:
+  aws:
+    stack:
+      auto: false
+    region:
+      static: ap-northeast-2      
+redis:
+  configuration:
+    secure: true
+feign:
+  client:
+    config:
+      default:   # 특정 FeignClient가 아닌 모든 Client에 대해 적용하고자 하는 경우 default 입력
+        loggerLevel: FULL
+  httpclient:
+    hc5:
+      enabled: true
+devon:
+  transaction:
+    composite:
+      data-source-list:
+        - dataSource
+        - slcDataSource
+        - dmsDataSource
+  mybatis:
+    multi-sql-session:
+      sql-session-list:
+        - id: sqlSession
+          data-source: dataSource
+          mapper-locations: classpath*:/sql/**/sql-*.xml
+          # config-location: classpath:/sql/configuration.xml
+        - id: opmdsSqlSession
+          data-source: dataSource
+          mapper-locations: classpath*:/sql/**/sql-*.xml
+          # config-location: classpath:/sql/configuration.xml  
+        - id: opslcSqlSession
+          data-source: slcDataSource
+          mapper-locations: classpath*:/sql/**/sql-*.xml
+          # config-location: classpath:/sql/configuration.xml
+        - id: opdmsSqlSession
+          data-source: dmsDataSource
+          mapper-locations: classpath*:/sql/**/sql-*.xml
+          # config-location: classpath:/sql/configuration.xml
+    common-dao:
+      data-source-type: multi
+      sql-session-list: sqlSession, opmdsSqlSession, opslcSqlSession, opdmsSqlSession
+      use-original-exception: true
+      exception-wrapper: devonframe.dataaccess.exception.CommonDaoExceptionWrapper
+  paging:
+    index-page:
+      server:
+        global-policy:
+          row-size: 5
+          page-size: 5
+          custom-row-size: 10, 15, 20
+    scroll-page:
+      executor:
+        scroll-paging-transfer:
+          condition-key-separator: "|"
+          condition-key-orderby-separator: "@"
+          condition-key-value-equity-separator: "="
+      server:
+        global-policy:
+          page-count: 10
+          custom-page-count: 5, 10, 20
+  #Message 설정
+  message:
+    default-type: db
+    use-parent: true # db(default-type)에 값이 없으면 file에서 message를 찾는다
+    file:
+      basename: message/message-core
+      cache-duration: 10
+      load-type: lazy
+    db:
+      data-source: dataSource
+      default-query: SELECT * FROM CM_CMMN_MSG_M
+      table-name: CM_CMMN_MSG_M
+      message-column: CMMN_MSG_CNTN
+      code-column: CMMN_MSG_ID
+      load-type: lazy          
+    #Trace log 설정
+    trace:
+      service:
+        enabled: true
+        limited-count: 1
+        prefix: '[S]'
+      persistent:
+        enabled: true
+        prefix: '[P]'
+ssgdx:
+  file-control:
+    base-path: /data001
+    temp-path: ${ssgdx.file-control.base-path}/temp    
+    work-path: ${ssgdx.file-control.base-path}/work
+    shared-path: /nas_etl
+    keco-path: /nas_keco
+  cloud:
+    aws:
+      sns:
+        enabled: true
+        default-platform-application: ssgdx-push-list
+        arn-mappings:
+          # default: ssgdx-push-list
+          ssgdx-push: ssgdx-push-list
+          ssgdx-mds-push: ssgdx-push-list
+          ssgdx-mdm-push: ssgdx-push-mdm
+          ssgdx-ppm-push: ssgdx-push-ppm
+          ssgdx-ptp: ssgdx-push-ptp
+        queue-client-helper:
+          message-group-id: ssgdx.mds.message.group        
+      sqs:
+        enabled: false
+      s3-upload:
+        default-bucket: ${DEFAULT_S3_BUCKET}
+      s3:
+        global-policy:
+          bucket: ${DEFAULT_S3_BUCKET}
+          upload-target-dir: test2
+          allow-pattern: "*"
+          deny-pattern: "*.jsp; *.exe"
+          rename-pattern: "{prefix}{date:yyyyMMddhhmmss}.{ext}"
+          max-total-file-size: 50MB
+          max-file-size: 30MB
+          sequence-allow: true
+          zero-size-allow: true
+  drm: 
+    url: http://aip.shinsegae.com/Gateway
+    system-id: 92048C08-8BC7-4168-BE9F-973E47F26771
+    encrypt-label-id: 3b933e6f-af6f-4d0a-9799-17393daf0ca6
+    decrypt-label-id: 3d5cbea3-7c90-4ede-bd4f-0d7adb543562
+    share-path: "\\\\100.67.13.61\\Shared"
+  idgenerator-factory:
+    default-type: table
+    loader:
+      table:
+        data-source: dataSource
+        table-name: SSGDX_SEQUENCE_MANAGEMENT
+      json:
+        location: classpath:idgenerator/IdGenerator.json 
+      columns:
+        enabled: ENABLED
+        name: SEQUENCE_NAME
+        id-generator-name: IDGENERATOR_TYPE
+        min-value: MIN_VALUE
+        max-value: MAX_VALUE
+        cycle: CYCLE
+        date-format: DATE_FORMAT
+        refresh: REFRESH
+        prefix: PREFIX
+        separator: DELIMETER
+        fill-character: FILL_CHARACTER
+        dynamic-key-size: DYNAMIC_KEY_SIZE
+        show-dynamic-key: SHOW_DYNAMIC_KEY
+        subject: SUBJECT
+  crypto-factory:
+    seed:
+      key: 'U0hJTlNFR0FFX0JBRURBTA=='
+    aes:
+      key: 'QS5sNozJ8I5OW3e5YzS5JMslpPUPBNgw2OU2Qpv4zoI='      
+    third-party-aes:
+      key: 'RGvNj6/w5XzwHdxBEARyOQ=='
+    cubeone:
+      local-support:
+        type: http
+        url: http://a97dc6025e62742bf82edb88f3a10ef3-8f226e5dc76c2d78.elb.ap-northeast-2.amazonaws.com/mds/api/cm
+      items: # item list
+        - ADDRESS     # 주소
+        - BODY        # 신체정보
+        - CARD        # 카드번호 
+        - CARD6       # 카드번호 6자리 이후 부분 암호화 
+        - DEPOSITF    # 계좌번호 
+        - EVA         # 신체정보
+        - MAIL        # email
+        - NAME        # 이름, ID
+        - MPHONE      # 전화번호
+        - PHONE       # 전화번호
+        - PHON        # 전화번호
+        - OPHONE      # 전화번호        
+        - SSN         # 주민번호, 사업자번호 7자리 이후 부분 암호화
+        - SSN2        # 주민번호
+        - SSNF        # 주민번호, 사업자번호 전체 암호화 
+        - TRANDATA    # 전문데이터
+        - LOCATE      # 위치정보
+      hash: # 단방향 암호화
+        - PWD         # 비밀번호 
+  mybatis:   # mybatis configutaion을 java로 관리하기 위한
+    map-underscore-to-camel-case: true
+    mapper-packages:
+      - com.shinsegae.ssgdx
+    interceptors:
+      - name: com.shinsegae.ssgdx.core.context.dataaccess.interceptor.AuditInterceptor
+      - name: com.shinsegae.ssgdx.core.context.dataaccess.interceptor.AuditPagingInterceptor
+      - name: com.shinsegae.ssgdx.core.context.dataaccess.interceptor.AuditScrollPagingInterceptor
+      - name: com.shinsegae.ssgdx.core.context.dataaccess.interceptor.AuditQueryLoggingInterceptor
+    properties: 
+      paging-query-builder: devonframe.paging.builder.DatabaseAwarePagingQueryBuilder
+      scroll-query-builder: devonframe.scrollpaging.builder.DatabaseAwareScrollPagingQueryBuilder
+      log-bind-sql: false  
+      limit-count: 10000
+      data-cut: false   
+#    custom-query-loader:
+#      xml-query-loader:
+#        enabled: true
+#        use-custom-configuration: true
+#        mapper-locations: classpath*:/sql/**/sql-*.xml
+#        mapper-file-resolver: com.shinsegae.ssgdx.core.dataaccess.mybatis.queryloader.XmlMapperFileResolver
+#        auto-reload: true
+  tran-context:
+    sql-session-factory: opmdsSqlSession
+  redis-seq-id:
+    cycle: true
+    max-value: 100
+  datadog:
+    url: https://api.datadoghq.com
+    api-key: ${DATADOG_API_KEY}
+    application-key: ${DATADOG_APPL_KEY}
+  secretsmanager:
+    name: ${SECRETS_MANAGER_OTHER_KEY}
+    jasypt-key: JASYPT_KEY
+  mail:
+    policy:
+      global-policy:
+        test:
+          test-mode: false
+        smtp:
+          host: smtp.office365.com
+          port: 587
+          auth:
+            id: q904b3@shinsegae.com
+            password: '*'
+            type: ssl
+            default-session-use: true
+            session-debug-message-flag: false
+        contents:
+          sender:
+            address: q904b3@shinsegae.com
+            name: Test사용자
+          content-type: 7bit
+          plain-content-type: text/plain 
+          html-content-type: text/html
+          charset-type: UTF-8
+          encoding-type: Q
+#      optional-policy-map:
+#        mailPolicy2:
+      template-map:
+        mailTemplate1:
+          html:
+            directory: classpath:/devonframe/mail
+            html-name: template1.jsp
+            save-resolved-html: true
+            save-resolve-html-dir: d:/
+          image-server:
+            server-ip: 
+            server-port: 8080
+  eai:
+    config-path: /sorc001/config/eai/eCrossStubConfig.xml
+  jjobs:
+    url: ${JJOBS_URL}
+    private-token: ${JJOBS_TOKEN}
+    retry-count: 3
+  async:
+    task-executions:
+      parallel:    
+        thread-name-prefix: async-parallel- 
+        pool: 
+          core-size: 10
+          max-size: 100
+          queue-capacity : 100
+          keep-alive: 30s
+  parallel:
+    timeout: 5m
+    executors: asyncParallelExecutor           
+springdoc:
+  packages-to-scan: com.shinsegae.ssgdx
+  paths-to-match: /api/v1/**
+jasypt:
+  encryptor:
+    bean: jasyptStringEncryptor
+    algorithm: PBEWITHSHA256AND256BITAES-CBC-BC
+    pool-size: 2
+  endpoint:
+    mappings:
+      reportDetails: SIMPLE   # endpoint를 간단하게 조회
+logging:
+  level:
+    jdbc: off
+    jdbc.sqlonly: info
+    jdbc.sqltiming: off
+    jdbc.audit: off
+    jdbc.resultset: off
+    jdbc.resultsettable: off
+    jdbc.connection: off
+    #com.shinsegae.ssgdx: debug
+    
+
+#spring.config.activate.on-profile: dev
+#server.port: 9100
+#ssgdx:
+#  web:
+#    encoding-by-channel:
+#      pos: euc-kr
+#---
+#spring.config.activate.on-profile: stg
+#server.port: 9100
+#ssgdx:
+#  web:
+#    encoding-by-channel:
+#      pos: euc-kr
+#---
+#spring.config.activate.on-profile: prd
+#server.port: 9100
+#ssgdx:
+#  web:
+#    encoding-by-channel:
+#      pos: euc-kr
+#---
+#spring.config.activate.on-profile: pt
+#server.port: 9100
+#ssgdx:
+#  web:
+#    encoding-by-channel:
+#      pos: euc-kr
+#---
+#spring.config.activate.on-profile: pft
+#server.port: 9100
+#ssgdx:
+#  web:
+#    encoding-by-channel:
+#      pos: euc-kr      
+#---
+#spring.config.activate.on-profile: edu
+#server.port: 9100
+#ssgdx:
+#  web:
+#    encoding-by-channel:
+#      pos: euc-kr      

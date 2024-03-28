@@ -1,0 +1,69 @@
+# 업무영역에서 필요한 properties를 관리하는 파일이다.
+# ssgdx.{주제영역코드} 하위에 properties 값을 작성하도록 한다.
+# 중복되는 key값이 발생하지 않도록 주의가 필요하다.
+# 전역으로 사용하는 설정에 대해서 추가한다.
+ssgdx-opdms:
+  ldi:
+    url:
+      # DMS 수기 에누리 권한 조회 (DIRT0101)
+      retrieveHwrtEnrAth: /dms/pos/mk/inf/retrieveHwrtEnrAth
+      # DMS 고객 대상행사 및 쿠폰조회 (DIRT0107)
+      retrieveCstTgetEvnCpn: /dms/pos/mk/inf/retrieveCstTgetEvnCpn
+      # DMS 에누리 행사 정보조회 (DIRT0103)
+      retrieveEnrEvnInfo: /dms/pos/mk/inf/retrieveEnrEvnInfo
+      # DMS 쿠폰 및 금액할인권 발급 예정 조회 8BIN (DIRT0106)
+      retrieveCpnAmtDctkIssuPlnd: /dms/pos/mk/inf/retrieveCpnAmtDctkIssuPlnd
+      # DMS 쿠폰 및 금액할인권 사용 확정 조회 (DIRT0105)
+      retrieveCpnAmtDctkUsgCfmt: /dms/pos/mk/inf/retrieveCpnAmtDctkUsgCfmt
+      
+---
+#----------------------------------------------------------------
+# 로컬에서만 사용하는 설정에 대해서 추가한다. (변경되는 Key/Value만 추가한다.)
+#----------------------------------------------------------------
+spring.config.activate.on-profile: local
+ssgdx-opdms:
+  ldi:
+    url:
+      sever-url: http://ndmsstg.shinsegae.com
+      #sever-url: http://ndms.shinsegae.com
+
+---
+#----------------------------------------------------------------
+# 개발에서만 사용하는 설정에 대해서 추가한다. (변경되는 Key/Value만 추가한다.)
+#----------------------------------------------------------------
+spring.config.activate.on-profile: dev
+ssgdx-opdms:
+  ldi:
+    url:
+      #sever-url: https://ndmsdev.shinsegae.com
+      sever-url: http://localhost:8088
+    # NLB AIP주소
+    skipIpLst: 0:0:0:0:0:0:0:1, 100.67.12.19
+
+---
+#----------------------------------------------------------------
+# 검증에서만 사용하는 설정에 대해서 추가한다. (변경되는 Key/Value만 추가한다.)
+#----------------------------------------------------------------
+spring.config.activate.on-profile: stg
+ssgdx-opdms:
+  ldi:
+    url:
+      # DMS 서버 내에서 URL 나가는 방화벽은 오픈되어 있지 않아서 localhost로 변경
+      #sever-url: http://ndmsstg.shinsegae.com
+      sever-url: http://localhost:8088
+    # NLB AIP주소
+    skipIpLst: 0:0:0:0:0:0:0:1, 100.67.8.98, 100.67.8.163
+
+---
+#----------------------------------------------------------------
+# 운영에서만 사용하는 설정에 대해서 추가한다. (변경되는 Key/Value만 추가한다.)
+#----------------------------------------------------------------
+spring.config.activate.on-profile: prd
+ssgdx-opdms:
+  ldi:
+    url:
+      # DMS 서버 내에서 URL 나가는 방화벽은 오픈되어 있지 않아서 localhost로 변경
+      #sever-url: http://ndms.shinsegae.com
+      sever-url: http://localhost:8088
+    # NLB AIP주소
+    skipIpLst: 0:0:0:0:0:0:0:1, 100.67.4.8, 100.67.4.141
